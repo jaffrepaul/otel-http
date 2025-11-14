@@ -1,9 +1,8 @@
 # Overview
 
-OpenTelemetry HTTP Instrumentation allows the user to automatically collect trace data and export them to the backend of choice (we can use Zipkin or Jaeger for this example), to give observability to distributed systems.
+OpenTelemetry HTTP Instrumentation allows the user to automatically collect trace data and logs, and export them to Sentry via OTLP (OpenTelemetry Protocol), providing observability to distributed systems.
 
-This is a simple example that demonstrates tracing HTTP request from client to server. The example
-shows key aspects of tracing such as
+This is a simple example that demonstrates tracing and logging for HTTP requests from client to server. The example shows key aspects of observability such as:
 
 - Root Span (on Client)
 - Child Span (on Client)
@@ -11,6 +10,7 @@ shows key aspects of tracing such as
 - SpanContext Propagation (from Client to Server)
 - Span Events
 - Span Attributes
+- Structured Logs correlated with Traces
 
 ## Installation
 
@@ -19,57 +19,57 @@ shows key aspects of tracing such as
 npm install
 ```
 
-Setup [Zipkin Tracing](https://zipkin.io/pages/quickstart.html)
-or
-Setup [Jaeger Tracing](https://www.jaegertracing.io/docs/latest/getting-started/#all-in-one)
+## Configuration
+
+1. Copy the example environment file:
+
+   ```sh
+   cp .env.example .env
+   ```
+
+2. Edit `.env` and add your Sentry OTLP endpoints:
+
+   - Get these values from: **Sentry Settings > Projects > [Your Project] > Client Keys (DSN)**
+   - You'll need both the **OTLP Traces Endpoint** and **OTLP Logs Endpoint**
+   - Your `.env` file should look like:
+
+   ```bash
+   OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://oXXXXX.ingest.us.sentry.io/api/XXXXX/integration/otlp/v1/traces
+   OTEL_EXPORTER_OTLP_TRACES_HEADERS=x-sentry-auth=sentry sentry_key=YOUR_PUBLIC_KEY
+
+   OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=https://oXXXXX.ingest.us.sentry.io/api/XXXXX/integration/otlp/v1/logs
+   OTEL_EXPORTER_OTLP_LOGS_HEADERS=x-sentry-auth=sentry sentry_key=YOUR_PUBLIC_KEY
+   ```
 
 ## Run the Application
 
-### Zipkin
+**Note:** If you have `NODE_OPTIONS` set in your environment, unset it first:
 
-- Run the server
+```sh
+unset NODE_OPTIONS
+```
 
-   ```sh
-   # from this directory
-   npm run zipkin:server
-   ```
-
-- Run the client
+1. **Start the server** (in one terminal):
 
    ```sh
-   # from this directory
-   npm run zipkin:client
+   npm run server
    ```
 
-#### Zipkin UI
-
-`zipkin:server` script should output the `traceid` in the terminal (e.g `traceid: 4815c3d576d930189725f1f1d1bdfcc6`).
-Go to Zipkin with your browser <http://localhost:9411/zipkin/traces/(your-trace-id)> (e.g <http://localhost:9411/zipkin/traces/4815c3d576d930189725f1f1d1bdfcc6>)
-
-<p align="center"><img alt="Zipkin UI showing a trace" src="./images/zipkin-ui.png?raw=true"/></p>
-
-### Jaeger
-
-- Run the server
-
+2. **Run the client** (in another terminal):
    ```sh
-   # from this directory
-   npm run jaeger:server
+   npm run client
    ```
 
-- Run the client
+The server will output the `traceId` in the terminal (e.g., `traceid: 4815c3d576d930189725f1f1d1bdfcc6`).
 
-   ```sh
-   # from this directory
-   npm run jaeger:client
-   ```
+## View in Sentry
 
-#### Jaeger UI
+After running the application, you should see data in Sentry within 30-60 seconds:
 
-`jaeger:server` script should output the `traceid` in the terminal (e.g `traceid: 4815c3d576d930189725f1f1d1bdfcc6`).
-Go to Jaeger with your browser <http://localhost:16686/trace/(your-trace-id)> (e.g <http://localhost:16686/trace/4815c3d576d930189725f1f1d1bdfcc6>)
+- **Traces**: Go to the **Performance** or **Traces** section in your Sentry project
+- **Logs**: Go to the **Logs** section in your Sentry project
 
-<p align="center"><img alt="Jaeger UI showing a trace"  src="images/jaeger-ui.png?raw=true"/></p>
+Traces and logs are correlated by trace ID for complete observability!
 
 ## Useful links
 
